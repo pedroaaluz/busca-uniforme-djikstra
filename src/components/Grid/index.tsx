@@ -1,7 +1,8 @@
-import { GridItem, Grid, Text} from "@chakra-ui/react";
+import { GridItem, Grid, Text, Center } from "@chakra-ui/react";
 import { generatorArrayEmpty } from "../../utils/generatorArrayEmpty";
 import "./index.css";
 import { ITileMap } from "../../types/ITilesMap";
+import React, { useState } from "react";
 
 interface IGeneratorGridInput {
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>;
@@ -42,44 +43,62 @@ const coordinatesToCheck = [
   [11, 5],
 ];
 
-const generatorTiles = ({
+const handlerGridStatus = (
+  index: number,
+  setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>
+) => {
+  console.log({ index });
+  setTilesMap((oldTiles) => {
+    return oldTiles.map((tile, i) => ({ ...tile, isStart: i === index }));
+  });
+};
+
+const GeneratorTiles = ({
   row,
   column,
   setTilesMap,
 }: IGeneratorTilesInput): JSX.Element => {
+  const [startTileIndex, setStartTileIndex] = useState<number | null>(null);
   const tilesCount = column * row;
 
-  return (
-    <>
-      {generatorArrayEmpty(tilesCount).map((_, index) => {
-        const rowIndex = Math.floor(index / column)
-        const columnIndex =  index % column
+  const tiles = generatorArrayEmpty(tilesCount).map((_, index) => {
+    const rowIndex = Math.floor(index / column);
+    const columnIndex = index % column;
 
-        const isCoordinateInSet = coordinatesToCheck.some(([x, y]) => x === rowIndex + 1 && y === columnIndex + 1);
+    const isCoordinateInSet = coordinatesToCheck.some(
+      ([x, y]) => x === rowIndex + 1 && y === columnIndex + 1
+    );
 
-        const isBlock = boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
-        
-        setTilesMap((oldTiles) => [
-          ...oldTiles,
-          {
-            coord: [rowIndex, columnIndex],
-            index,
-            isBlock,
-            isEnd: false,
-            isStart: false,
-          },
-        ]);
+    const isBlock =
+      boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
 
-        // colocar condicional de inicio e fim
-        return (
-          <GridItem w="10" h="10" bg={isBlock ? "#000" : "#d3d6db"} >
-            <Text> PEdro </Text>
-          </ GridItem >
-        )
-      
-      })}
-    </>
-  );
+    const tilesOptions = {
+      coord: [rowIndex, columnIndex],
+      index,
+      isBlock,
+      isEnd: columnIndex === 5 && rowIndex === 2 ? true : false ,
+      isStart: index === startTileIndex,
+    };
+    return (
+      <GridItem
+        key={index}
+        w="10"
+        h="10"
+        bg={isBlock ? "#000" : "#d3d6db"}
+        onClick={() => {
+          if(!isBlock && !tilesOptions.isEnd) setStartTileIndex(index);
+          handlerGridStatus(index, setTilesMap);
+        }}
+      >
+        <Center>
+          {tilesOptions.isStart && <Text fontSize={22}> S </Text>}
+          {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
+        </Center>
+      </GridItem>
+    );
+  });
+
+  return <>{tiles}</>;
 };
 
 export const GeneratorGrid = ({
@@ -88,7 +107,7 @@ export const GeneratorGrid = ({
   return (
     <>
       <Grid templateColumns="repeat(12, 1fr)" gap={1}>
-        {generatorTiles({ row: 12, column: 12, setTilesMap })}
+        {GeneratorTiles({ row: 12, column: 12, setTilesMap })}
       </Grid>
     </>
   );
