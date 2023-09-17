@@ -45,9 +45,10 @@ const coordinatesToCheck = [
 
 const handlerGridStatus = (
   index: number,
-  setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>
+  setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>,
+  tilesOptions
 ) => {
-  console.log({ index });
+  console.log({ index , tilesOptions});
   setTilesMap((oldTiles) => {
     return oldTiles.map((tile, i) => ({ ...tile, isStart: i === index }));
   });
@@ -69,8 +70,7 @@ const GeneratorTiles = ({
       ([x, y]) => x === rowIndex + 1 && y === columnIndex + 1
     );
 
-    const isBlock =
-      boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
+    const isBlock = boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
 
     const tilesOptions = {
       coord: [rowIndex, columnIndex],
@@ -79,15 +79,20 @@ const GeneratorTiles = ({
       isEnd: columnIndex === 5 && rowIndex === 2 ? true : false ,
       isStart: index === startTileIndex,
     };
-    return (
+
+    return tilesOptions
+  });
+
+  return <>{tiles.map((tilesOptions, index) => {
+     return (
       <GridItem
         key={index}
         w="10"
         h="10"
-        bg={isBlock ? "#000" : "#d3d6db"}
+        bg={tilesOptions.isBlock ? "#000" : "#d3d6db"}
         onClick={() => {
-          if(!isBlock && !tilesOptions.isEnd) setStartTileIndex(index);
-          handlerGridStatus(index, setTilesMap);
+          if(!tilesOptions.isBlock && !tilesOptions.isEnd) setStartTileIndex(index);
+          handlerGridStatus(index, setTilesMap, tilesOptions);
         }}
       >
         <Center>
@@ -96,9 +101,7 @@ const GeneratorTiles = ({
         </Center>
       </GridItem>
     );
-  });
-
-  return <>{tiles}</>;
+  })}</>;
 };
 
 export const GeneratorGrid = ({
