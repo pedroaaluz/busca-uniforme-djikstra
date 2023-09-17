@@ -2,53 +2,29 @@ import { GridItem, Grid, Text, Center } from "@chakra-ui/react";
 import { generatorArrayEmpty } from "../../utils/generatorArrayEmpty";
 import "./index.css";
 import { ITileMap } from "../../types/ITilesMap";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { boundaryChecker } from "../../utils/boundaryChecker";
+import { coordinatesToCheck } from "../../utils/coordinatesToCheck";
 
 interface IGeneratorGridInput {
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>;
+  tilesMap: ITileMap[];
 }
 
 interface IGeneratorTilesInput {
   row: number;
   column: number;
+  tilesMap: ITileMap[];
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>;
 }
-
-const boundaryChecker = (index: number, tilesCount: number, row: number) => {
-  const isTopRow = index < row;
-  const isBottomRow = index >= tilesCount - row;
-  const isLeftColumn = index % row === 0;
-  const isRightColumn = (index + 1) % row === 0;
-
-  return isLeftColumn || isRightColumn || isBottomRow || isTopRow;
-};
-
-const coordinatesToCheck = [
-  [1, 7],
-  [2, 7],
-  [3, 7],
-  [4, 4],
-  [4, 5],
-  [4, 6],
-  [4, 7],
-  [5, 4],
-  [6, 4],
-  [6, 6],
-  [7, 4],
-  [7, 6],
-  [8, 6],
-  [9, 6],
-  [9, 5],
-  [10, 5],
-  [11, 5],
-];
 
 const handlerGridStatus = (
   index: number,
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>,
-  tilesOptions
+  tilesOptions,
 ) => {
   console.log({ index , tilesOptions});
+  
   setTilesMap((oldTiles) => {
     return oldTiles.map((tile, i) => ({ ...tile, isStart: i === index }));
   });
@@ -58,32 +34,38 @@ const GeneratorTiles = ({
   row,
   column,
   setTilesMap,
+  tilesMap
 }: IGeneratorTilesInput): JSX.Element => {
-  const [startTileIndex, setStartTileIndex] = useState<number | null>(null);
+  const [startTileIndex, setStartTileIndex] = useState<number>(125);
   const tilesCount = column * row;
 
-  const tiles = generatorArrayEmpty(tilesCount).map((_, index) => {
-    const rowIndex = Math.floor(index / column);
-    const columnIndex = index % column;
+  useEffect(() => {
+    const tiles = generatorArrayEmpty(tilesCount).map((_, index) => {
+      const rowIndex = Math.floor(index / column);
+      const columnIndex = index % column;
+  
+      const isCoordinateInSet = coordinatesToCheck.some(
+        ([x, y]) => x === rowIndex + 1 && y === columnIndex + 1
+      );
+  
+      const isBlock = boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
 
-    const isCoordinateInSet = coordinatesToCheck.some(
-      ([x, y]) => x === rowIndex + 1 && y === columnIndex + 1
-    );
+      const tilesOptions = {
+        coord: [rowIndex, columnIndex],
+        index,
+        isBlock,
+        isEnd: columnIndex === 5 && rowIndex === 2 ,
+        isStart: startTileIndex === index && !isBlock,
+      };
+  
+      return tilesOptions
+    });
+  
+    setTilesMap(tiles)
+  }, [startTileIndex])
 
-    const isBlock = boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
 
-    const tilesOptions = {
-      coord: [rowIndex, columnIndex],
-      index,
-      isBlock,
-      isEnd: columnIndex === 5 && rowIndex === 2 ? true : false ,
-      isStart: index === startTileIndex,
-    };
-
-    return tilesOptions
-  });
-
-  return <>{tiles.map((tilesOptions, index) => {
+  return <>{tilesMap.map((tilesOptions, index) => {
      return (
       <GridItem
         key={index}
@@ -96,7 +78,7 @@ const GeneratorTiles = ({
         }}
       >
         <Center>
-          {tilesOptions.isStart && <Text fontSize={22}> S </Text>}
+          {startTileIndex === index   && <Text fontSize={22}> S </Text>}
           {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
         </Center>
       </GridItem>
@@ -106,11 +88,12 @@ const GeneratorTiles = ({
 
 export const GeneratorGrid = ({
   setTilesMap,
+  tilesMap
 }: IGeneratorGridInput): JSX.Element => {
   return (
     <>
       <Grid templateColumns="repeat(12, 1fr)" gap={1}>
-        {GeneratorTiles({ row: 12, column: 12, setTilesMap })}
+        {GeneratorTiles({ row: 12, column: 12, setTilesMap, tilesMap })}
       </Grid>
     </>
   );

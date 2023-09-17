@@ -23,7 +23,7 @@ export class Bilateral extends AlgorithmHelper {
       const { isEnd, isStart } = cr
   
       if (isEnd) acc.endTile = cr 
-      if (isStart) acc.endTile = cr 
+      if (isStart) acc.startTile = cr 
   
       return acc 
     }, { startTile: {} as ITileMap, endTile: {} as ITileMap})
@@ -40,7 +40,6 @@ export class Bilateral extends AlgorithmHelper {
 
   findNodes(coord: number[], tilesBlocked: string[]) {
     const nodes = [];
-    console.log('4', { coord })
 
     const [rowIndex, columnIndex] = coord;
 
@@ -49,19 +48,24 @@ export class Bilateral extends AlgorithmHelper {
     // se for maior que 12 é pq já é a ultima linha
     const columnSearchIndex = columnIndex + 1 < 11 ? rowIndex + 1 : rowIndex;
 
-    for (let row = rowSearchIndex; row === 1; row--) {
-      for (let column = columnSearchIndex; column === 1; column--) {
+    console.log('4', { coord, rowSearchIndex, columnSearchIndex})
+
+    for (let row = 0; row === rowSearchIndex; row++) {
+      console.log('1')
+      nodes.push([rowIndex - 1/* , column - 1 */]); 
+    /*   for (let column = columnSearchIndex; column === columnSearchIndex - 3; column--) {
         if (
           rowIndex !== row &&
           columnIndex !== column &&
           !tilesBlocked.includes(`${row}${column}`)
         ) {
+          console.log('1')
           nodes.push([rowIndex - 1, column - 1]);
         }
-      }
+      } */
     }
 
-    console.log(nodes)
+    console.log('qwerdqwe',{nodes})
   }
 
   start(): string {

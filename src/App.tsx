@@ -19,8 +19,8 @@ function App() {
   return (
     <>
        <Center> 
-          <GeneratorGrid setTilesMap={setTilesMaps}/>
-          <Button onClick={() => startAlgorithm(tilesMap)}>
+          <GeneratorGrid setTilesMap={setTilesMaps} tilesMap={tilesMap}/>
+          <Button onClick={() => startAlgorithm(tilesMap) } >
             teste
           </Button>
        </Center>
