@@ -15,6 +15,7 @@ export class aStarearch extends AlgorithmHelper{
     startTile: ITileMap;
     endTile: ITileMap;
     queues: IQueues;
+    actualTile: ITileMap;
     tilesMap: ITileMap[];
 
     constructor({tilesMap}: IaStarInput){
@@ -37,10 +38,35 @@ export class aStarearch extends AlgorithmHelper{
           this.tilesMap = tilesMap;
           this.startTile = startTile;
           this.endTile = endTile;
-    }
+          this.actualTile = startTile
 
-    calculateDistance(start: number[], goal: number[]){
-        
+          this.queues.closedQueue.push(startTile.coord.join(""))
     }
+    start(): string {
+        const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
+        const tilesBlockedFormatted = tilesBlocked.map((tile) =>
+        tile.coord.join("")
+        );
 
+        const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
+
+
+
+    function calculateDistance(start: number[], goal: number[]){
+        const distanceX = Math.pow((start[0] - goal[0]), 2);
+        const distanceY = Math.pow((start[1] - goal[1]), 2);
+
+        const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
+
+        return distanceBetweenPoints;
+    } 
+
+    function Gcost(nodesToCalc: ){
+         
+    }
+    
+    
+
+        return "aaawg"
+    }      
 }
