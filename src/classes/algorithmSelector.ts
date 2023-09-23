@@ -1,7 +1,7 @@
 import { ITileMap } from "../types/ITilesMap";
 import { Bilateral } from "./bilateral";
 
-export const algorithmSelector = (algorithm: "bilateral", tilesMap: ITileMap[]) => {
+export const algorithmSelector = (algorithm: string, tilesMap: ITileMap[]) => {
   switch (algorithm) {
     case "bilateral":
       return new Bilateral({tilesMap})

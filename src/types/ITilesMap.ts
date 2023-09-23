@@ -3,5 +3,6 @@ export interface ITileMap {
   isBlock?: boolean;
   isStart?:boolean;
   isEnd?: boolean;
-  index: number;
+  index: string;
+  background?: string;
 }
