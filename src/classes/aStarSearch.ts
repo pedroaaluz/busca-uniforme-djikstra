@@ -1,3 +1,4 @@
+import { IFindNodes } from "../types/IFindNodes";
 import { ITileMap } from "../types/ITilesMap";
 import { AlgorithmHelper } from "./algorithmHelper";
 
@@ -42,6 +43,7 @@ export class aStarearch extends AlgorithmHelper{
 
           this.queues.closedQueue.push(startTile.coord.join(""))
     }
+
     start(): string {
         const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
         const tilesBlockedFormatted = tilesBlocked.map((tile) =>
@@ -50,8 +52,10 @@ export class aStarearch extends AlgorithmHelper{
 
         const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
 
+        return "aa"
 
-
+    } 
+}
     function calculateDistance(start: number[], goal: number[]){
         const distanceX = Math.pow((start[0] - goal[0]), 2);
         const distanceY = Math.pow((start[1] - goal[1]), 2);
@@ -59,14 +63,15 @@ export class aStarearch extends AlgorithmHelper{
         const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
 
         return distanceBetweenPoints;
-    } 
-
-    function Gcost(nodesToCalc: ){
-         
+    
+        
     }
     
-    
+    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap){
 
-        return "aaawg"
+        const costToNext  = actualTile.cost + nodesToCalc.forEach(el => {
+            el.cost
+        });
+
+        return costToNext
     }      
-}

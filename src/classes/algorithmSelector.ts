@@ -1,10 +1,10 @@
 import { ITileMap } from "../types/ITilesMap";
-import { Bilateral } from "./bilateral";
+import { aStarearch } from "./aStarSearch";
 
-export const algorithmSelector = (algorithm: "bilateral", tilesMap: ITileMap[]) => {
+export const algorithmSelector = (algorithm: "aStarSearch", tilesMap: ITileMap[]) => {
   switch (algorithm) {
-    case "bilateral":
-      return new Bilateral({tilesMap})
+    case "aStarSearch":
+      return new aStarearch({tilesMap})
     default:
       throw new Error('algorithm not found')
   }

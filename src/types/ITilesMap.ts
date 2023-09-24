@@ -4,4 +4,5 @@ export interface ITileMap {
   isStart?:boolean;
   isEnd?: boolean;
   index: number;
+  cost: number;
 }

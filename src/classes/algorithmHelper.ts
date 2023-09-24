@@ -4,7 +4,7 @@ import { ITileMap } from "../types/ITilesMap";
 export abstract class AlgorithmHelper {
   abstract start(_input: ITileMap[]): string;
 
-  findNodes(coord: number[], tilesBlocked: string[]) : IFindNodes {
+  findNodes(coord: number[], tilesBlocked: string[]) : IFindNodes[]{
     const nodes = [];
 
     const [rowTileCur, columnTileCur] = coord;
