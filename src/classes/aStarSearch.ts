@@ -52,6 +52,8 @@ export class aStarearch extends AlgorithmHelper{
 
         const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
 
+        
+
         return "aa"
 
     } 
@@ -63,15 +65,25 @@ export class aStarearch extends AlgorithmHelper{
         const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
 
         return distanceBetweenPoints;
-    
-        
     }
     
-    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap){
+    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap): number[] {
 
-        const costToNext  = actualTile.cost + nodesToCalc.forEach(el => {
-            el.cost
+        const costs : number[] = []
+
+        nodesToCalc.forEach(el => {
+            costs.push(el.cost + actualTile.cost)
         });
 
-        return costToNext
+        return costs
     }      
+
+    function Heuristic(goal: number[], nodes: IFindNodes[]) : number[] {
+        const distances: number[] = []
+
+        nodes.forEach(el => {
+            distances.push(calculateDistance(el.coord, goal))
+        });
+''
+        return distances
+    }
