@@ -11,7 +11,7 @@ function App() {
   const [tilesMap, setTilesMaps ] = useState<ITileMap[]>([])
 
   const startAlgorithm = (tiles: ITileMap[]) => {
-    const AlgorithmBuild = algorithmSelector('bilateral', tiles)
+    const AlgorithmBuild = algorithmSelector('aStarSearch', tiles)
 
     AlgorithmBuild.start()
   }

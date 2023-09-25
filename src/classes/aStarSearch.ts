@@ -40,6 +40,7 @@ export class aStarearch extends AlgorithmHelper{
           this.startTile = startTile;
           this.endTile = endTile;
           this.actualTile = startTile
+          this.actualTile.cost = 0
 
           this.queues.closedQueue.push(startTile.coord.join(""))
     }
@@ -52,6 +53,19 @@ export class aStarearch extends AlgorithmHelper{
 
         const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
 
+        console.log(nodes)
+        console.log(this.actualTile)
+        console.log(Gcost(nodes, this.actualTile))
+
+        console.log(Heuristic(this.endTile.coord,nodes,))
+
+        const distancias = Heuristic(this.endTile.coord,nodes)
+
+        const menorValor = distancias.sort()
+
+        const lowest = menorValor[0]
+
+        console.log(lowest)
         
 
         return "aa"
@@ -70,11 +84,11 @@ export class aStarearch extends AlgorithmHelper{
     function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap): number[] {
 
         const costs : number[] = []
-
+    
         nodesToCalc.forEach(el => {
-            costs.push(el.cost + actualTile.cost)
+            costs.push(actualTile.cost + el.cost) 
         });
-
+        
         return costs
     }      
 
@@ -84,6 +98,6 @@ export class aStarearch extends AlgorithmHelper{
         nodes.forEach(el => {
             distances.push(calculateDistance(el.coord, goal))
         });
-''
+
         return distances
     }
