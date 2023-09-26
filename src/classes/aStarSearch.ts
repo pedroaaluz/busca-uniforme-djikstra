@@ -51,27 +51,25 @@ export class aStarearch extends AlgorithmHelper{
         tile.coord.join("")
         );
 
+
         const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
 
-        console.log(nodes)
-        console.log(this.actualTile)
-        console.log(Gcost(nodes, this.actualTile))
+        let custo = Gcost(nodes, this.actualTile)
+        let heuristica = Heuristic(this.endTile.coord, nodes)
 
-        console.log(Heuristic(this.endTile.coord,nodes,))
+        //console.log(custo)
+        //console.log(custo)
 
-        const distancias = Heuristic(this.endTile.coord,nodes)
+        let custoTotal = nodes.map(a => { 
+            let b = { coord: a.coord, cost: custo.forEach(el => el.cost), distance: heuristica.forEach(el => el.distancia)}
+            return b
+        })
 
-        const menorValor = distancias.sort()
-
-        const lowest = menorValor[0]
-
-        console.log(lowest)
-        
-
-        return "aa"
+        console.log(custoTotal)
+        return "aaa"
+    }
 
     } 
-}
     function calculateDistance(start: number[], goal: number[]){
         const distanceX = Math.pow((start[0] - goal[0]), 2);
         const distanceY = Math.pow((start[1] - goal[1]), 2);
@@ -81,23 +79,25 @@ export class aStarearch extends AlgorithmHelper{
         return distanceBetweenPoints;
     }
     
-    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap): number[] {
+    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap) : { coord: number[], cost: number }[] {
 
-        const costs : number[] = []
+        const costs : { coord: number[], cost: number }[] = []
     
         nodesToCalc.forEach(el => {
-            costs.push(actualTile.cost + el.cost) 
+            const a = { coord: el.coord, cost: actualTile.cost  + el.cost  }
+            costs.push(a) 
         });
         
         return costs
     }      
 
-    function Heuristic(goal: number[], nodes: IFindNodes[]) : number[] {
-        const distances: number[] = []
+    function Heuristic(goal: number[], nodes: IFindNodes[]) : { coord: number[], distancia: number }[]{
+        const distances: { coord: number[], distancia: number }[] = []
 
-        nodes.forEach(el => {
-            distances.push(calculateDistance(el.coord, goal))
+        nodes.forEach(element => {
+            const a = { coord: element.coord, distancia: calculateDistance(element.coord, goal) }
+            distances.push(a)
         });
-
+        
         return distances
     }
