@@ -1,10 +1,8 @@
-import { IFindNodes } from "../types/IFindNodes";
-import { ITileMap } from "../types/ITilesMap";
 
 export abstract class AlgorithmHelper {
-  abstract start(_input: ITileMap[]): string;
+  abstract start(): void;
 
-  findNodes(coord: number[], tilesBlocked: string[]) : IFindNodes[]{
+  findNodes(coord: number[], tilesBlocked: string[]) {
     const nodes = [];
 
     const [rowTileCur, columnTileCur] = coord;

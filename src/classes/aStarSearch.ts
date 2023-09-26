@@ -2,102 +2,115 @@ import { IFindNodes } from "../types/IFindNodes";
 import { ITileMap } from "../types/ITilesMap";
 import { AlgorithmHelper } from "./algorithmHelper";
 
-
-interface IQueues{
-    openQueue: string[];
-    closedQueue: string[];
+interface IQueues {
+  openQueue: string[];
+  closedQueue: string[];
 }
 
-interface IaStarInput{
-    tilesMap: ITileMap[];
+interface IaStarInput {
+  tilesMap: ITileMap[];
 }
 
-export class aStarearch extends AlgorithmHelper{
-    startTile: ITileMap;
-    endTile: ITileMap;
-    queues: IQueues;
-    actualTile: ITileMap;
-    tilesMap: ITileMap[];
+export class aStarearch extends AlgorithmHelper {
+  startTile: ITileMap;
+  endTile: ITileMap;
+  queues: IQueues;
+  tilesMap: ITileMap[];
 
-    constructor({tilesMap}: IaStarInput){
-        super();
+  constructor({ tilesMap }: IaStarInput) {
+    super();
 
-        const {startTile, endTile} = tilesMap.reduce((acc, cr) => {
-            const { isEnd, isStart } = cr
-        
-            if (isEnd) acc.endTile = cr 
-            if (isStart) acc.startTile = cr 
-        
-            return acc 
-          }, { startTile: {} as ITileMap, endTile: {} as ITileMap})
+    const { startTile, endTile } = tilesMap.reduce(
+      (acc, cr) => {
+        const { isEnd, isStart } = cr;
+
+        if (isEnd) acc.endTile = cr;
+        if (isStart) acc.startTile = cr;
+
+        return acc;
+      },
+      { startTile: {} as ITileMap, endTile: {} as ITileMap }
+    );
+
+    this.queues = {
+      openQueue: [],
+      closedQueue: [],
+    };
+
+    this.tilesMap = tilesMap;
+    this.startTile = startTile;
+    this.endTile = endTile;
+
+    this.queues.closedQueue.push(startTile.coord.join(""));
+  }
+
+  start(): string {
+    const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
+    const tilesBlockedFormatted = tilesBlocked.map((tile) =>
+      tile.coord.join("")
+    );
+
+    //actualTile.coord.join("") !== this.endTile.coord.join("")
+    let actualTile: ITileMap & {totalCost?: number,  } = this.startTile
+    while(this.endTile.index !== actualTile.index){
+      const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
+      console.log(nodes)
       
-          this.queues = {
-            openQueue: [],
-            closedQueue: []
-          }
-      
-          this.tilesMap = tilesMap;
-          this.startTile = startTile;
-          this.endTile = endTile;
-          this.actualTile = startTile
-          this.actualTile.cost = 0
 
-          this.queues.closedQueue.push(startTile.coord.join(""))
-    }
-
-    start(): string {
-        const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
-        const tilesBlockedFormatted = tilesBlocked.map((tile) =>
-        tile.coord.join("")
-        );
-
-
-        const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
-
-        let custo = Gcost(nodes, this.actualTile)
-        let heuristica = Heuristic(this.endTile.coord, nodes)
-
-        //console.log(custo)
-        //console.log(custo)
-
-        let custoTotal = nodes.map(a => { 
-            let b = { coord: a.coord, cost: custo.forEach(el => el.cost), distance: heuristica.forEach(el => el.distancia)}
-            return b
-        })
-
-        console.log(custoTotal)
-        return "aaa"
-    }
-
-    } 
-    function calculateDistance(start: number[], goal: number[]){
-        const distanceX = Math.pow((start[0] - goal[0]), 2);
-        const distanceY = Math.pow((start[1] - goal[1]), 2);
-
-        const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
-
-        return distanceBetweenPoints;
-    }
+    const x = totalCost(this.endTile.coord, nodes).sort()
+    console.log(x)
     
-    function Gcost(nodesToCalc: IFindNodes[], actualTile: ITileMap) : { coord: number[], cost: number }[] {
+    const [node, ] = x
+    this.queues.closedQueue.push(node.index)
+    actualTile = node
 
-        const costs : { coord: number[], cost: number }[] = []
-    
-        nodesToCalc.forEach(el => {
-            const a = { coord: el.coord, cost: actualTile.cost  + el.cost  }
-            costs.push(a) 
-        });
-        
-        return costs
-    }      
-
-    function Heuristic(goal: number[], nodes: IFindNodes[]) : { coord: number[], distancia: number }[]{
-        const distances: { coord: number[], distancia: number }[] = []
-
-        nodes.forEach(element => {
-            const a = { coord: element.coord, distancia: calculateDistance(element.coord, goal) }
-            distances.push(a)
-        });
-        
-        return distances
     }
+
+    //console.log(custo)
+    //console.log(custo)
+    return "aaa";
+  }
+}
+
+function calculateDistance(start: number[], goal: number[]) {
+  const distanceX = Math.abs(start[0] - goal[0]);
+  const distanceY = Math.abs(start[1] - goal[1]);
+
+  if (distanceX > distanceY) {
+    return 14 * distanceY + 10 * (distanceX - distanceY);
+  }
+
+  return 14 * distanceX + 10 * (distanceY - distanceX);
+}
+function totalCost(
+  goal: number[],
+  nodes: IFindNodes[]
+): { coord: number[]; distance: number; cost: number; totalCost: number, index: string }[] {
+  const distances = nodes.map((node) => {
+    const distance = calculateDistance(node.coord, goal);
+    return {
+      coord: node.coord,
+      distance,
+      cost: node.cost,
+      totalCost: node.cost + distance,
+      index: node.coord.join("")
+    };
+  });
+
+  return distances;
+
+// function Gcost(
+//   nodesToCalc: IFindNodes[],
+//   actualTile: ITileMap
+// ): { coord: number[]; cost: number }[] {
+//   const costs: { coord: number[]; cost: number }[] = [];
+
+//   nodesToCalc.forEach((el) => {
+//     const a = { coord: el.coord, cost: actualTile.cost + el.cost };
+//     costs.push(a);
+//   });
+
+//   return costs;
+// }
+
+}

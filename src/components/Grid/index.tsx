@@ -4,10 +4,10 @@ import "./index.css";
 import { ITileMap } from "../../types/ITilesMap";
 import React, { useState, useEffect } from "react";
 import { boundaryChecker } from "../../utils/boundaryChecker";
-import { coordinatesToCheck } from "../../utils/coordinatesToCheck";
 
 interface IGeneratorGridInput {
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>;
+  editorSelected: string;
   tilesMap: ITileMap[];
 }
 
@@ -15,86 +15,133 @@ interface IGeneratorTilesInput {
   row: number;
   column: number;
   tilesMap: ITileMap[];
+  editorSelected: string;
   setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>;
 }
-
-const handlerGridStatus = (
-  index: number,
-  setTilesMap: React.Dispatch<React.SetStateAction<ITileMap[]>>,
-  tilesOptions,
-) => {
-  console.log({ index , tilesOptions});
-  
-  setTilesMap((oldTiles) => {
-    return oldTiles.map((tile, i) => ({ ...tile, isStart: i === index }));
-  });
-};
 
 const GeneratorTiles = ({
   row,
   column,
   setTilesMap,
-  tilesMap
+  tilesMap,
+  editorSelected,
 }: IGeneratorTilesInput): JSX.Element => {
-  const [startTileIndex, setStartTileIndex] = useState<number>(125);
+  const [startTileIndex, setStartTileIndex] = useState<number>(126);
+  const [endTileIndex, setEndTileIndex] = useState<number>(29);
+  const [tilesBlocked, setTilesBlocked] = useState<string[]>([
+    "16",
+    "26",
+    "36",
+    "43",
+    "53",
+    "63",
+    "44",
+    "45",
+    "46",
+    "65",
+    "73",
+    "75",
+    "85",
+    "95",
+    "94",
+    "104",
+  ]);
   const tilesCount = column * row;
 
   useEffect(() => {
     const tiles = generatorArrayEmpty(tilesCount).map((_, index) => {
       const rowIndex = Math.floor(index / column);
       const columnIndex = index % column;
-  
-      const isCoordinateInSet = coordinatesToCheck.some(
-        ([x, y]) => x === rowIndex + 1 && y === columnIndex + 1
-      );
-  
-      const isBlock = boundaryChecker(index, tilesCount, row) || isCoordinateInSet;
+      const tilesIndex = `${rowIndex}${columnIndex}`;
+
+      const isBlock =
+        ![endTileIndex, startTileIndex].includes(index) &&
+        (boundaryChecker(index, tilesCount, row) ||
+          tilesBlocked.includes(tilesIndex));
 
       const tilesOptions = {
         coord: [rowIndex, columnIndex],
-        index,
+        index: tilesIndex,
         isBlock,
-        isEnd: columnIndex === 5 && rowIndex === 2 ,
-        isStart: startTileIndex === index && !isBlock,
+        isEnd: endTileIndex === index,
+        isStart: startTileIndex === index,
       };
-  
-      return tilesOptions
+
+      return tilesOptions;
     });
-  
-    setTilesMap(tiles)
-  }, [startTileIndex])
 
+    setTilesMap(tiles);
+  }, [startTileIndex, endTileIndex, tilesBlocked]);
 
-  return <>{tilesMap.map((tilesOptions, index) => {
-     return (
-      <GridItem
-        key={index}
-        w="10"
-        h="10"
-        bg={tilesOptions.isBlock ? "#000" : "#d3d6db"}
-        onClick={() => {
-          if(!tilesOptions.isBlock && !tilesOptions.isEnd) setStartTileIndex(index);
-          handlerGridStatus(index, setTilesMap, tilesOptions);
-        }}
-      >
-        <Center>
-          {startTileIndex === index   && <Text fontSize={22}> S </Text>}
-           <Text fontSize={10}> {tilesOptions.coord.join('')} </Text>
-          {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
-        </Center>
-      </GridItem>
-    );
-  })}</>;
+  return (
+    <>
+      {tilesMap.map((tilesOptions, i) => {
+        const color =
+          tilesOptions.background ||
+          (tilesOptions.isBlock ? "#252a34" : "#d3d6db");
+
+        return (
+          <GridItem
+            key={i}
+            w="10"
+            h="10"
+            bg={color}
+            onClick={() => {
+              console.log(editorSelected);
+              if (!tilesOptions.isBlock) {
+                switch (editorSelected) {
+                  case "start":
+                    setStartTileIndex(i);
+                    break;
+                  case "goal":
+                    setEndTileIndex(i);
+                    break;
+                  case "block":
+                    setTilesBlocked([...tilesBlocked, tilesOptions.index]);
+                    break;
+                  default:
+                    break;
+                }
+              } else {
+                setTilesBlocked(
+                  tilesBlocked.filter((t) => t !== tilesOptions.index)
+                );
+              }
+
+              setTilesMap((oldTiles) => {
+                return oldTiles.map((tile, i) => ({
+                  ...tile,
+                  isStart: i === i,
+                }));
+              });
+            }}
+          >
+            <Center>
+              {startTileIndex === i && <Text fontSize={22}> S </Text>}
+              {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
+            </Center>
+          </GridItem>
+        );
+      })}
+    </>
+  );
 };
 
 export const GeneratorGrid = ({
   setTilesMap,
-  tilesMap
+  tilesMap,
+  editorSelected,
 }: IGeneratorGridInput): JSX.Element => {
   return (
     <>
       <Grid templateColumns="repeat(12, 1fr)" gap={1}>
-        {GeneratorTiles({ row: 12, column: 12, setTilesMap, tilesMap })}
+        {GeneratorTiles({
+          editorSelected,
+          row: 12,
+          column: 12,
+          setTilesMap,
+          tilesMap,
+        })}
       </Grid>
     </>
   );
