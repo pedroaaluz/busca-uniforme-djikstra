@@ -118,6 +118,7 @@ const GeneratorTiles = ({
           >
             <Center>
               {startTileIndex === i && <Text fontSize={22}> S </Text>}
+              <Text fontSize={10}>{tilesOptions.index}</Text>
               {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
             </Center>
           </GridItem>

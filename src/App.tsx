@@ -43,7 +43,7 @@ function App() {
 
   const translatorAlgorithm: Record<string, string> = {
     bilateral: "Bilateral",
-    aStarSearch: "aStarSearch",
+    aStarSearch: "A*",
   };
 
   const startAlgorithm = (tiles: ITileMap[]) => {

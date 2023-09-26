@@ -50,20 +50,22 @@ export class aStarearch extends AlgorithmHelper {
       tile.coord.join("")
     );
 
-    //actualTile.coord.join("") !== this.endTile.coord.join("")
-    let actualTile: ITileMap & {totalCost?: number,  } = this.startTile
-    while(this.endTile.index !== actualTile.index){
-      const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
-      console.log(nodes)
-      
+    let i = 0;
+    // this.endTile.index !== actualTile.index || actualTile.coord.join("") !== this.endTile.coord.join("")
+    let actualTile: ITileMap & { totalCost?: number } = this.startTile;
+    while (i < 100) {
+      const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
+      //.filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
+      i++;
 
-    const x = totalCost(this.endTile.coord, nodes).sort()
-    console.log(x)
-    
-    const [node, ] = x
-    this.queues.closedQueue.push(node.index)
-    actualTile = node
-
+      console.log(nodes);
+      const x = totalCost(this.endTile.coord, nodes).sort();
+      console.log("x", x);
+      console.log("current", actualTile);
+      const [node] = x;
+      this.queues.closedQueue.push(node.index);
+      console.log("node", { node, i });
+      actualTile = node;
     }
 
     //console.log(custo)
@@ -85,7 +87,13 @@ function calculateDistance(start: number[], goal: number[]) {
 function totalCost(
   goal: number[],
   nodes: IFindNodes[]
-): { coord: number[]; distance: number; cost: number; totalCost: number, index: string }[] {
+): {
+  coord: number[];
+  distance: number;
+  cost: number;
+  totalCost: number;
+  index: string;
+}[] {
   const distances = nodes.map((node) => {
     const distance = calculateDistance(node.coord, goal);
     return {
@@ -93,24 +101,23 @@ function totalCost(
       distance,
       cost: node.cost,
       totalCost: node.cost + distance,
-      index: node.coord.join("")
+      index: node.coord.join(""),
     };
   });
 
   return distances;
 
-// function Gcost(
-//   nodesToCalc: IFindNodes[],
-//   actualTile: ITileMap
-// ): { coord: number[]; cost: number }[] {
-//   const costs: { coord: number[]; cost: number }[] = [];
+  // function Gcost(
+  //   nodesToCalc: IFindNodes[],
+  //   actualTile: ITileMap
+  // ): { coord: number[]; cost: number }[] {
+  //   const costs: { coord: number[]; cost: number }[] = [];
 
-//   nodesToCalc.forEach((el) => {
-//     const a = { coord: el.coord, cost: actualTile.cost + el.cost };
-//     costs.push(a);
-//   });
+  //   nodesToCalc.forEach((el) => {
+  //     const a = { coord: el.coord, cost: actualTile.cost + el.cost };
+  //     costs.push(a);
+  //   });
 
-//   return costs;
-// }
-
+  //   return costs;
+  // }
 }
