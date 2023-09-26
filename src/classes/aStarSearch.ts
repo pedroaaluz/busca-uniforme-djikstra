@@ -50,27 +50,32 @@ export class aStarearch extends AlgorithmHelper {
       tile.coord.join("")
     );
 
-    let i = 0;
-    // this.endTile.index !== actualTile.index || actualTile.coord.join("") !== this.endTile.coord.join("")
+    // 
+    const pathsTaken = []
     let actualTile: ITileMap & { totalCost?: number } = this.startTile;
-    while (i < 100) {
-      const nodes = this.findNodes(this.startTile.coord, tilesBlockedFormatted);
-      //.filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
-      i++;
+    while (true) {
+      const nodes = this.findNodes(actualTile.coord, tilesBlockedFormatted).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
 
+      if(nodes.find((n) => n.coord.join('') === this.endTile.index)) {
+        break
+      }
       console.log(nodes);
-      const x = totalCost(this.endTile.coord, nodes).sort();
-      console.log("x", x);
-      console.log("current", actualTile);
+      const x = totalCost(this.endTile.coord, nodes).sort((a, b) => {
+        if (a.totalCost !== b.totalCost) {
+          return a.totalCost - b.totalCost;
+        } else {
+          return a.distance - b.distance;
+        }
+      });
+
       const [node] = x;
       this.queues.closedQueue.push(node.index);
-      console.log("node", { node, i });
       actualTile = node;
+      pathsTaken.push(actualTile)
     }
 
     //console.log(custo)
-    //console.log(custo)
-    return "aaa";
+    return pathsTaken;
   }
 }
 
@@ -106,18 +111,4 @@ function totalCost(
   });
 
   return distances;
-
-  // function Gcost(
-  //   nodesToCalc: IFindNodes[],
-  //   actualTile: ITileMap
-  // ): { coord: number[]; cost: number }[] {
-  //   const costs: { coord: number[]; cost: number }[] = [];
-
-  //   nodesToCalc.forEach((el) => {
-  //     const a = { coord: el.coord, cost: actualTile.cost + el.cost };
-  //     costs.push(a);
-  //   });
-
-  //   return costs;
-  // }
 }
