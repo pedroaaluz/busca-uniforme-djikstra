@@ -2,8 +2,15 @@ import { IFindNodes } from "../types/IFindNodes";
 import { ITileMap } from "../types/ITilesMap";
 import { AlgorithmHelper } from "./algorithmHelper";
 
+
+interface ITileCostMap extends ITileMap {
+  totalCost: number;
+  distance: number;
+  father: string;
+}
+
 interface IQueues {
-  openQueue: string[];
+  openQueue: ITileCostMap[];
   closedQueue: string[];
 }
 
@@ -11,7 +18,7 @@ interface IaStarInput {
   tilesMap: ITileMap[];
 }
 
-export class aStarearch extends AlgorithmHelper {
+export class AStarearch extends AlgorithmHelper {
   startTile: ITileMap;
   endTile: ITileMap;
   queues: IQueues;
@@ -44,23 +51,27 @@ export class aStarearch extends AlgorithmHelper {
     this.queues.closedQueue.push(startTile.coord.join(""));
   }
 
-  start(): string {
+  start() {
     const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
     const tilesBlockedFormatted = tilesBlocked.map((tile) =>
       tile.coord.join("")
     );
 
-    // 
-    const pathsTaken = []
+    const pathsTaken = [];
     let actualTile: ITileMap & { totalCost?: number } = this.startTile;
-    while (true) {
-      const nodes = this.findNodes(actualTile.coord, tilesBlockedFormatted).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")) )
 
-      if(nodes.find((n) => n.coord.join('') === this.endTile.index)) {
-        break
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const nodes = this.findNodes(
+        actualTile.coord,
+        tilesBlockedFormatted
+      ).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")));
+
+      if (nodes.find((n) => n.coord.join("") === this.endTile.index)) {
+        break;
       }
-      console.log(nodes);
-      const x = totalCost(this.endTile.coord, nodes).sort((a, b) => {
+    
+      const nodeWithCost = totalCost(this.endTile.coord, nodes).sort((a, b) => {
         if (a.totalCost !== b.totalCost) {
           return a.totalCost - b.totalCost;
         } else {
@@ -68,14 +79,53 @@ export class aStarearch extends AlgorithmHelper {
         }
       });
 
-      const [node] = x;
+      let [node] = nodeWithCost;
+
+      if(!node) {
+        [node] = this.queues.openQueue.sort((a, b) => {
+          if (a.totalCost !== b.totalCost) {
+            return a.totalCost - b.totalCost;
+          } else {
+            return a.distance - b.distance;
+          }
+        }); 
+
+        
+      }
+
+      this.queues.openQueue.push(nodeWithCost);
+
+      // Logica de adcionar na lista aberta nodesFound
+      // Logica adicionar actualTile na lista fechada
+
+      /***
+       * 
+       * 
+       * 
+       * 
+       */
+
       this.queues.closedQueue.push(node.index);
       actualTile = node;
-      pathsTaken.push(actualTile)
+      pathsTaken.push(actualTile);
+
+      console.log({actualTile, node, nodeWithCost })
+
     }
 
-    //console.log(custo)
-    return pathsTaken;
+    const allNodes = pathsTaken.map(({ index }) => index);
+
+    allNodes.push(this.endTile.index);
+    allNodes.push(this.startTile.index);
+
+    return this.tilesMap.map((t) => {
+      delete t.background
+      if (allNodes.includes(t.index)) {
+        t.background = "#b83b5e";
+      }
+
+      return t;
+    });
   }
 }
 
@@ -92,13 +142,7 @@ function calculateDistance(start: number[], goal: number[]) {
 function totalCost(
   goal: number[],
   nodes: IFindNodes[]
-): {
-  coord: number[];
-  distance: number;
-  cost: number;
-  totalCost: number;
-  index: string;
-}[] {
+) {
   const distances = nodes.map((node) => {
     const distance = calculateDistance(node.coord, goal);
     return {
@@ -107,6 +151,7 @@ function totalCost(
       cost: node.cost,
       totalCost: node.cost + distance,
       index: node.coord.join(""),
+      father: node.father
     };
   });
 

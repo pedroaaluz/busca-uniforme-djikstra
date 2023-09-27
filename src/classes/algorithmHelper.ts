@@ -17,7 +17,7 @@ export abstract class AlgorithmHelper {
           coord.join("") !== `${row}${column}` &&
           !tilesBlocked.includes(`${row}${column}`)
         ) {
-          nodes.push({coord: [row, column], cost: (column !== columnTileCur && row !== rowTileCur) ? 14 : 10});
+          nodes.push({coord: [row, column], father: coord.join("") ,cost: (column !== columnTileCur && row !== rowTileCur) ? 14 : 10});
         }
       }
     }

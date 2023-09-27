@@ -1,4 +1,5 @@
 export interface IFindNodes {
   coord: number[],
-  cost: number
+  cost: number,
+  father: string
 }

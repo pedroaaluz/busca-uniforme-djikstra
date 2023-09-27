@@ -69,8 +69,6 @@ export class Bilateral extends AlgorithmHelper {
       currentTiles: this.endTile,
     };
 
-
-
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const { currentTiles } = turn === 1 ? startSearch : endSearch;
@@ -176,6 +174,34 @@ export class Bilateral extends AlgorithmHelper {
         turn--;
       }
     }
-    console.log(this.queues)
+
+
+    const { endQueue, startQueue } = this.queues;
+
+    const endQueueStringified = endQueue?.map((e) => e.join(''));
+    const startQueueStringified = startQueue?.map((s) => s.join(''));
+
+    const allNodes = [...new Set([endQueueStringified, startQueueStringified].flat())];
+
+    const tilesFindInAlgorithm = this.tilesMap.map((t) => {
+      if (!t.isBlock) {
+        if (allNodes.includes(t.index)) {
+          if (endQueueStringified.includes(t.index) && startQueueStringified.includes(t.index)) {
+            t.background = "#521262";
+          } else {
+            t.background = startQueueStringified.includes(t.index)
+              ? "#b83b5e"
+              : "#30e3ca";
+          }
+        }
+
+        if (t.index === this.startTile.index || t.index === this.endTile.index) {
+          t.background = t.isStart ? "#b83b5e" : "#30e3ca";
+        }
+      }
+      return t;
+    })
+
+    return tilesFindInAlgorithm
   }
 }
