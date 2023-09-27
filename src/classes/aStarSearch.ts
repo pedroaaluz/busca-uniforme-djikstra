@@ -61,7 +61,7 @@ export class AStarearch extends AlgorithmHelper {
     let actualTile: ITileMap & { totalCost?: number } = this.startTile;
 
     // eslint-disable-next-line no-constant-condition
-    while (true) {
+    while (this.queues.openQueue.length !== 0 || actualTile.index !== this.endTile.coord.join("")) {
       const nodes = this.findNodes(
         actualTile.coord,
         tilesBlockedFormatted
@@ -93,7 +93,10 @@ export class AStarearch extends AlgorithmHelper {
         
       }
 
-      this.queues.openQueue.push(nodeWithCost);
+      for (const node of nodeWithCost) {
+        this.queues.openQueue.push(node);
+      }
+
 
       // Logica de adcionar na lista aberta nodesFound
       // Logica adicionar actualTile na lista fechada
@@ -145,14 +148,16 @@ function totalCost(
 ) {
   const distances = nodes.map((node) => {
     const distance = calculateDistance(node.coord, goal);
-    return {
+    const totalCost : ITileCostMap = { 
       coord: node.coord,
-      distance,
+      distance: distance,
       cost: node.cost,
       totalCost: node.cost + distance,
+      father: node.father,
       index: node.coord.join(""),
-      father: node.father
-    };
+    } 
+    
+    return totalCost
   });
 
   return distances;
