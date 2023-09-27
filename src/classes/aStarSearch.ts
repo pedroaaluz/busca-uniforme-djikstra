@@ -2,7 +2,6 @@ import { IFindNodes } from "../types/IFindNodes";
 import { ITileMap } from "../types/ITilesMap";
 import { AlgorithmHelper } from "./algorithmHelper";
 
-
 interface ITileCostMap extends ITileMap {
   totalCost: number;
   distance: number;
@@ -11,11 +10,49 @@ interface ITileCostMap extends ITileMap {
 
 interface IQueues {
   openQueue: ITileCostMap[];
-  closedQueue: string[];
+  closedQueue: ITileCostMap[];
 }
 
 interface IaStarInput {
   tilesMap: ITileMap[];
+}
+
+function calculateDistance(start: number[], goal: number[]) {
+  const distanceX = Math.abs(start[0] - goal[0]);
+  const distanceY = Math.abs(start[1] - goal[1]);
+
+  if (distanceX > distanceY) {
+    return 14 * distanceY + 10 * (distanceX - distanceY);
+  }
+
+  return 14 * distanceX + 10 * (distanceY - distanceX);
+}
+
+function totalCost(
+  goal: number[],
+  currentTile: ITileMap,
+  nodes: IFindNodes[]
+): ITileCostMap[] {
+  const distances = nodes.map((node) => {
+    const distanceEnd = calculateDistance(node.coord, goal);
+    const distanceCurrentTile = calculateDistance(
+      node.coord,
+      currentTile.coord
+    );
+
+    const totalCost: ITileCostMap = {
+      index: node.index,
+      father: node.father,
+      coord: node.coord,
+      distance: distanceEnd,
+      cost: node.cost,
+      totalCost: node.cost + distanceEnd + distanceCurrentTile,
+    };
+
+    return totalCost;
+  });
+
+  return distances;
 }
 
 export class AStarearch extends AlgorithmHelper {
@@ -47,118 +84,147 @@ export class AStarearch extends AlgorithmHelper {
     this.tilesMap = tilesMap;
     this.startTile = startTile;
     this.endTile = endTile;
-
-    this.queues.closedQueue.push(startTile.coord.join(""));
   }
 
   start() {
     const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
-    const tilesBlockedFormatted = tilesBlocked.map((tile) =>
-      tile.coord.join("")
+    const tilesBlockedFormatted = tilesBlocked.map((tile) => tile.index);
+
+    let currentTile = this.startTile as ITileCostMap;
+
+    const x = this.findNodes(
+      currentTile.coord,
+      tilesBlockedFormatted
+    )
+
+    const nodeWithCost = totalCost(
+      this.endTile.coord,
+      currentTile,
+      x
     );
-
-    const pathsTaken = [];
-    let actualTile: ITileMap & { totalCost?: number } = this.startTile;
-
-    // eslint-disable-next-line no-constant-condition
-    while (this.queues.openQueue.length !== 0 || actualTile.index !== this.endTile.coord.join("")) {
-      const nodes = this.findNodes(
-        actualTile.coord,
-        tilesBlockedFormatted
-      ).filter((n) => !this.queues.closedQueue.includes(n.coord.join("")));
-
-      if (nodes.find((n) => n.coord.join("") === this.endTile.index)) {
-        break;
-      }
     
-      const nodeWithCost = totalCost(this.endTile.coord, nodes).sort((a, b) => {
-        if (a.totalCost !== b.totalCost) {
-          return a.totalCost - b.totalCost;
-        } else {
-          return a.distance - b.distance;
-        }
-      });
+    this.queues.openQueue.push(nodeWithCost);
 
-      let [node] = nodeWithCost;
+    let i = 0
 
-      if(!node) {
-        [node] = this.queues.openQueue.sort((a, b) => {
-          if (a.totalCost !== b.totalCost) {
-            return a.totalCost - b.totalCost;
-          } else {
-            return a.distance - b.distance;
+    const path = [];
+    
+    try {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        i++
+        console.log(i)
+  
+        const tilesIdsInClosedQueue = this.queues.closedQueue.map(
+          ({ index }) => index
+        );
+  
+        console.log(`tilesIdsInClosedQueue ${i}`,tilesIdsInClosedQueue)
+  
+        this.queues.closedQueue.push(currentTile);
+  
+        // nós encontrados ao redor do nó atual
+        const nodesFound = this.findNodes(
+          currentTile.coord,
+          tilesBlockedFormatted
+        ).filter((n) => !tilesIdsInClosedQueue.includes(n.index));
+  
+        // pegar o custo dos nó na borda do tile atual
+        const nodeWithCost = totalCost(
+          this.endTile.coord,
+          currentTile,
+          nodesFound
+        );
+  
+        const openQueue = this.queues.openQueue;
+
+        // verificar se a lista aberta possui os novos nós de bordar, atualizar o pai dos nós presentes na openQueue se necessário
+        const newValuesToOpenQueue = openQueue.reduce((acc, cr) => {
+          const nodeInOpenQueue = nodeWithCost.find((n, index) =>{
+            return n.index === cr.index
+          });
+  
+          if (nodeInOpenQueue) {
+            // caso o nó atual seja um pai mais proximo hehehehjeh, trocar
+            cr.father =
+              nodeInOpenQueue.totalCost > cr.totalCost
+                ? nodeInOpenQueue.father
+                : cr.father;
           }
-        }); 
+  
+  
+          acc.push(cr);
+  
+          return acc;
+        }, [] as ITileCostMap[]);
+  
+        console.log(`newValuesToOpenQueue ${i}`, newValuesToOpenQueue)
+        console.log(`openQueue ${i}`, openQueue)
+        console.log(currentTile.index )
+        if (currentTile.index === '56') {
+          console.log('qwerqwerqwerqwerqwerqw', { nodesFound, newValuesToOpenQueue})
+        }
 
+        const [nextNode] = newValuesToOpenQueue.sort(
+          (a, b) => a.totalCost - b.totalCost
+        );
+  
+  
+        this.queues.openQueue.push(...newValuesToOpenQueue);
+        currentTile = nextNode;
         
+  
+        if (currentTile.index === this.endTile.index) {
+          this.queues.closedQueue.push(currentTile);
+          break;
+        }
       }
 
-      for (const node of nodeWithCost) {
-        this.queues.openQueue.push(node);
+      let currentFather = currentTile?.father;
+      let child: ITileCostMap = currentTile;
+  
+      const closedQueueReversed =  this.queues.closedQueue.reverse()
+      
+      console.log()
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        child = closedQueueReversed.find((n) => {
+          return n.index === currentFather;
+        })!;
+  
+        path.push(child);
+  
+        currentFather = child.father;
+  
+        if (currentFather === this.startTile.index) {
+          break
+        }
       }
-
-
-      // Logica de adcionar na lista aberta nodesFound
-      // Logica adicionar actualTile na lista fechada
-
-      /***
-       * 
-       * 
-       * 
-       * 
-       */
-
-      this.queues.closedQueue.push(node.index);
-      actualTile = node;
-      pathsTaken.push(actualTile);
-
-      console.log({actualTile, node, nodeWithCost })
-
+    } catch (error) {
+      
+      const closedQueueReversed =  this.queues.closedQueue.reverse()
+      
+      console.log('closedQueueReversed', { closedQueueReversed })
     }
 
-    const allNodes = pathsTaken.map(({ index }) => index);
+    const allNodes = this.queues.openQueue.map(({ index }) => index);
 
-    allNodes.push(this.endTile.index);
-    allNodes.push(this.startTile.index);
-
+    const pathIds = path.map(({ index }) => index);
     return this.tilesMap.map((t) => {
-      delete t.background
+      delete t.background;
       if (allNodes.includes(t.index)) {
         t.background = "#b83b5e";
+      }
+
+      if (pathIds.includes(t.index)) {
+        t.background = "#f9ed69";
+      }
+
+      if ([this.endTile.index, this.startTile.index].includes(t.index)) {
+        t.background = "#f9ed69";
       }
 
       return t;
     });
   }
-}
-
-function calculateDistance(start: number[], goal: number[]) {
-  const distanceX = Math.abs(start[0] - goal[0]);
-  const distanceY = Math.abs(start[1] - goal[1]);
-
-  if (distanceX > distanceY) {
-    return 14 * distanceY + 10 * (distanceX - distanceY);
-  }
-
-  return 14 * distanceX + 10 * (distanceY - distanceX);
-}
-function totalCost(
-  goal: number[],
-  nodes: IFindNodes[]
-) {
-  const distances = nodes.map((node) => {
-    const distance = calculateDistance(node.coord, goal);
-    const totalCost : ITileCostMap = { 
-      coord: node.coord,
-      distance: distance,
-      cost: node.cost,
-      totalCost: node.cost + distance,
-      father: node.father,
-      index: node.coord.join(""),
-    } 
-    
-    return totalCost
-  });
-
-  return distances;
 }

@@ -1,4 +1,3 @@
-
 export abstract class AlgorithmHelper {
   abstract start(): void;
 
@@ -17,11 +16,16 @@ export abstract class AlgorithmHelper {
           coord.join("") !== `${row}${column}` &&
           !tilesBlocked.includes(`${row}${column}`)
         ) {
-          nodes.push({coord: [row, column], father: coord.join("") ,cost: (column !== columnTileCur && row !== rowTileCur) ? 14 : 10});
+          nodes.push({
+            index: [row, column].join(""),
+            coord: [row, column],
+            father: coord.join(""),
+            cost: column !== columnTileCur && row !== rowTileCur ? 14 : 10,
+          });
         }
       }
     }
 
-    return nodes
+    return nodes;
   }
 }
