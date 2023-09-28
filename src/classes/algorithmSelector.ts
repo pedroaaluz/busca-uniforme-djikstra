@@ -1,11 +1,11 @@
 import { ITileMap } from "../types/ITilesMap";
-import { AStarearch } from "./aStarSearch";
+import { AStarSearch } from "./aStarSearch";
 import { Bilateral } from "./bilateral";
 
 export const algorithmSelector = (algorithm: string, tilesMap: ITileMap[]) => {
   switch (algorithm) {
     case "aStarSearch":
-      return new AStarearch({tilesMap})
+      return new AStarSearch({tilesMap})
     case "bilateral":
       return new Bilateral({tilesMap})
     default:

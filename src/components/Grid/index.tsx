@@ -1,6 +1,5 @@
 import { GridItem, Grid, Text, Center } from "@chakra-ui/react";
 import { generatorArrayEmpty } from "../../utils/generatorArrayEmpty";
-import "./index.css";
 import { ITileMap } from "../../types/ITilesMap";
 import React, { useState, useEffect } from "react";
 import { boundaryChecker } from "../../utils/boundaryChecker";
@@ -87,7 +86,6 @@ const GeneratorTiles = ({
             h="10"
             bg={color}
             onClick={() => {
-              console.log(editorSelected);
               if (!tilesOptions.isBlock) {
                 switch (editorSelected) {
                   case "start":
@@ -118,7 +116,7 @@ const GeneratorTiles = ({
           >
             <Center>
               {startTileIndex === i && <Text fontSize={22}> S </Text>}
-              <Text fontSize={10}>{tilesOptions.index}</Text>
+              {tilesOptions.cost && <Text  fontSize={10}>{tilesOptions.totalCost}</Text>}
               {tilesOptions.isEnd && <Text fontSize={22}> G </Text>}
             </Center>
           </GridItem>

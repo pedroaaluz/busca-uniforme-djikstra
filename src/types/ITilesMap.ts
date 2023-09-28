@@ -1,4 +1,5 @@
 export interface ITileMap {
+  totalCost?: number;
   coord: number[];
   isBlock?: boolean;
   isStart?:boolean;
