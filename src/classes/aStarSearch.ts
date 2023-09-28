@@ -29,6 +29,15 @@ function calculateDistance(start: number[], goal: number[]) {
   return 14 * distanceX + 10 * (distanceY - distanceX);
 }
 
+//distancia euclidiana
+function calculateEuclidianDistance(start: number[], goal: number[]){
+    const distanceX = Math.pow((start[0] - goal[0]), 2);
+    const distanceY = Math.pow((start[1] - goal[1]), 2);
+    const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
+
+    return distanceBetweenPoints;
+}
+
 function totalCost(goal: number[], nodes: IFindNodes[]): ITileCostMap[] {
   const distances = nodes.map((node) => {
     const distanceEnd = calculateDistance(node.coord, goal);
@@ -198,6 +207,10 @@ export class AStarearch extends AlgorithmHelper {
         break
       }
     }
+    
+    console.log(closedQueueReversed.reduce((acc, cr) => {
+      return acc + cr.cost!
+    }, 0))
 
     const allNodes = this.queues.openQueue.map(({ index }) => index);
     const allNodes2 = this.queues.closedQueue.map(({ index }) => index);
