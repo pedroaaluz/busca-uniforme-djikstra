@@ -17,6 +17,7 @@ interface IaStarInput {
   tilesMap: ITileMap[];
 }
 
+// distancia diagonal - variação do Euclides! (apenas para reta e diagonal!)
 function calculateDistance(start: number[], goal: number[]) {
   const distanceX = Math.abs(start[0] - goal[0]);
   const distanceY = Math.abs(start[1] - goal[1]);
@@ -28,17 +29,9 @@ function calculateDistance(start: number[], goal: number[]) {
   return 14 * distanceX + 10 * (distanceY - distanceX);
 }
 
-function totalCost(
-  goal: number[],
-  currentTile: ITileMap,
-  nodes: IFindNodes[]
-): ITileCostMap[] {
+function totalCost(goal: number[], nodes: IFindNodes[]): ITileCostMap[] {
   const distances = nodes.map((node) => {
     const distanceEnd = calculateDistance(node.coord, goal);
-    const distanceCurrentTile = calculateDistance(
-      node.coord,
-      currentTile.coord
-    );
 
     const totalCost: ITileCostMap = {
       index: node.index,
@@ -46,7 +39,7 @@ function totalCost(
       coord: node.coord,
       distance: distanceEnd,
       cost: node.cost,
-      totalCost: node.cost + distanceEnd + distanceCurrentTile,
+      totalCost: node.cost + distanceEnd,
     };
 
     return totalCost;
@@ -90,139 +83,143 @@ export class AStarearch extends AlgorithmHelper {
     const tilesBlocked = this.tilesMap.filter(({ isBlock }) => isBlock);
     const tilesBlockedFormatted = tilesBlocked.map((tile) => tile.index);
 
+    this.queues.openQueue.push({
+      ...this.startTile,
+      totalCost: calculateDistance(this.startTile.coord, this.endTile.coord),
+    } as ITileCostMap);
+
     let currentTile = this.startTile as ITileCostMap;
 
-    const x = this.findNodes(
-      currentTile.coord,
-      tilesBlockedFormatted
-    )
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { openQueue, closedQueue } = this.queues;
+      //lista aberta vazia
+      if (openQueue.length === 0) {
+        console.log("sem caminho");
+        break;
+      }
 
-    const nodeWithCost = totalCost(
-      this.endTile.coord,
-      currentTile,
-      x
-    );
-    
-    this.queues.openQueue.push(nodeWithCost);
+      // remover tile atual da lista aberta
+      this.queues.openQueue = openQueue.filter(
+        (t) => t.index !== currentTile.index
+      );
+      this.queues.closedQueue.push(currentTile);
 
-    let i = 0
+      // processar nós vizinhos, removendo nós da linha fechada e paredes
+      const neighborNodes = this.findNodes(
+        currentTile.coord,
+        tilesBlockedFormatted
+      ).filter((n) => !closedQueue.find((c) => c.index === n.index));
+
+      // calcular o custo do nós vizninhos
+      const neighborNodesCost = totalCost(this.endTile.coord, neighborNodes);
+
+      console.log("neighborNodesCost");
+      console.log(neighborNodesCost);
+
+      // verificar nós repertidos e novos nós
+      const { nodesInOpenQueue, newNode } = neighborNodesCost.reduce(
+        (acc, cr) => {
+          const nodeInOpenQueue = openQueue.find((n) => n.index === cr.index);
+
+          if (nodeInOpenQueue) {
+            acc.nodesInOpenQueue.push(cr);
+          } else {
+            acc.newNode.push(cr);
+          }
+
+          return acc;
+        },
+        {
+          nodesInOpenQueue: [] as ITileCostMap[],
+          newNode: [] as ITileCostMap[],
+        }
+      );
+
+      // se tiver repertido, tentar atualizar os existente
+      if (nodesInOpenQueue.length) {
+        this.queues.openQueue = openQueue.map((node) => {
+          const nr = nodesInOpenQueue.find((r) => r.index === node.index);
+
+          if (nr) {
+            node.father =
+              node.totalCost > nr.totalCost ? nr.father : node.father;
+          }
+
+          return node;
+        });
+      }
+
+      // se for novos nós, apenas adicionar los
+      if (newNode.length) {
+        console.log("newNode");
+        console.log(newNode);
+        openQueue.push(...newNode);
+      }
+
+      this.queues.openQueue = openQueue.filter(
+        (n) => n.index !== currentTile.index
+      );
+      //  remover nó da lista aberta e ordenar fila com menor custo F
+      const [nextNode] = this.queues.openQueue.sort(
+        (a, b) => a.totalCost - b.totalCost
+      );
+
+      console.log("nextNode");
+      console.log(nextNode);
+      console.log("openQueue");
+      console.log(openQueue);
+
+      currentTile = nextNode;
+
+      if (currentTile.index === this.endTile.index) {
+        console.log("weqqwe");
+        break;
+      }
+    }
 
     const path = [];
-    
-    try {
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        i++
-        console.log(i)
-  
-        const tilesIdsInClosedQueue = this.queues.closedQueue.map(
-          ({ index }) => index
-        );
-  
-        console.log(`tilesIdsInClosedQueue ${i}`,tilesIdsInClosedQueue)
-  
-        this.queues.closedQueue.push(currentTile);
-  
-        // nós encontrados ao redor do nó atual
-        const nodesFound = this.findNodes(
-          currentTile.coord,
-          tilesBlockedFormatted
-        ).filter((n) => !tilesIdsInClosedQueue.includes(n.index));
-  
-        // pegar o custo dos nó na borda do tile atual
-        const nodeWithCost = totalCost(
-          this.endTile.coord,
-          currentTile,
-          nodesFound
-        );
-  
-        const openQueue = this.queues.openQueue;
 
-        // verificar se a lista aberta possui os novos nós de bordar, atualizar o pai dos nós presentes na openQueue se necessário
-        const newValuesToOpenQueue = openQueue.reduce((acc, cr) => {
-          const nodeInOpenQueue = nodeWithCost.find((n, index) =>{
-            return n.index === cr.index
-          });
-  
-          if (nodeInOpenQueue) {
-            // caso o nó atual seja um pai mais proximo hehehehjeh, trocar
-            cr.father =
-              nodeInOpenQueue.totalCost > cr.totalCost
-                ? nodeInOpenQueue.father
-                : cr.father;
-          }
-  
-  
-          acc.push(cr);
-  
-          return acc;
-        }, [] as ITileCostMap[]);
-  
-        console.log(`newValuesToOpenQueue ${i}`, newValuesToOpenQueue)
-        console.log(`openQueue ${i}`, openQueue)
-        console.log(currentTile.index )
-        if (currentTile.index === '56') {
-          console.log('qwerqwerqwerqwerqwerqw', { nodesFound, newValuesToOpenQueue})
-        }
+    let currentFather = currentTile?.father;
+    let child: ITileCostMap = currentTile;
+    const closedQueueReversed =  this.queues.closedQueue.reverse()
 
-        const [nextNode] = newValuesToOpenQueue.sort(
-          (a, b) => a.totalCost - b.totalCost
-        );
-  
-  
-        this.queues.openQueue.push(...newValuesToOpenQueue);
-        currentTile = nextNode;
-        
-  
-        if (currentTile.index === this.endTile.index) {
-          this.queues.closedQueue.push(currentTile);
-          break;
-        }
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      child = closedQueueReversed.find((n) => {
+        return n.index === currentFather;
+      })!;
+
+      path.push(child);
+
+      currentFather = child.father;
+
+      if (currentFather === this.startTile.index) {
+        break
       }
-
-      let currentFather = currentTile?.father;
-      let child: ITileCostMap = currentTile;
-  
-      const closedQueueReversed =  this.queues.closedQueue.reverse()
-      
-      console.log()
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        child = closedQueueReversed.find((n) => {
-          return n.index === currentFather;
-        })!;
-  
-        path.push(child);
-  
-        currentFather = child.father;
-  
-        if (currentFather === this.startTile.index) {
-          break
-        }
-      }
-    } catch (error) {
-      
-      const closedQueueReversed =  this.queues.closedQueue.reverse()
-      
-      console.log('closedQueueReversed', { closedQueueReversed })
     }
 
     const allNodes = this.queues.openQueue.map(({ index }) => index);
-
-    const pathIds = path.map(({ index }) => index);
+    const allNodes2 = this.queues.closedQueue.map(({ index }) => index);
+    const pathIds = path.map((p) => p.index)
     return this.tilesMap.map((t) => {
       delete t.background;
       if (allNodes.includes(t.index)) {
         t.background = "#b83b5e";
       }
 
-      if (pathIds.includes(t.index)) {
+      if (allNodes2.includes(t.index)) {
         t.background = "#f9ed69";
       }
 
+      if (pathIds.includes(t.index)) {
+        t.background = "#66B039";
+      } 
+
+
       if ([this.endTile.index, this.startTile.index].includes(t.index)) {
-        t.background = "#f9ed69";
-      }
+        t.background = "#66B039";
+      } 
 
       return t;
     });

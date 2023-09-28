@@ -7,3 +7,10 @@ export interface ITileMap {
   background?: string;
   cost?: number;
 }
+
+
+export interface ITileCostMap extends ITileMap {
+  totalCost: number;
+  distance: number;
+  father: string;
+}
