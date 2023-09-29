@@ -8,6 +8,7 @@ import {
   StarIcon,
   UpDownIcon,
   Search2Icon,
+  CheckIcon
 } from "@chakra-ui/icons";
 
 import "./App.css";
@@ -30,10 +31,10 @@ import { algorithmSelector } from "./classes/algorithmSelector";
 
 function App() {
   const [tilesMap, setTilesMaps] = useState<ITileMap[]>([]);
-  const [algorithmSelected, setAlgorithmSelected] =
-    useState<string>("bilateral");
+  const [algorithmSelected, setAlgorithmSelected] = useState<string>("bilateral");
   const [editorSelected, setEditorEdit] = useState<string>("start");
   const [showAlert, setShowAlert] = useState<boolean>(false);
+  const [totalCost, setTotalCost] = useState<number>(0) 
 
   const translatorEditor: Record<string, string> = {
     start: "Início",
@@ -43,50 +44,25 @@ function App() {
 
   const translatorAlgorithm: Record<string, string> = {
     bilateral: "Bilateral",
+    diagonal: "A* (diagonal)",
+    euclides: "A* (euclides)",
   };
 
   const startAlgorithm = (tiles: ITileMap[]) => {
     const AlgorithmBuild = algorithmSelector(algorithmSelected, tiles);
-    setShowAlert(false)
+
+    setShowAlert(false);
+    setTotalCost(0);
+
     try {
-      AlgorithmBuild.start();
+      const tilesFindInAlgorithm = AlgorithmBuild.start();
 
-      const { queues, startTile, endTile } = AlgorithmBuild;
+      setTotalCost(AlgorithmBuild.findTotalCost())
 
-      const { endQueue, startQueue } = queues;
-
-      const endQueueStringified = endQueue.map((e) => e.join(''));
-      const startQueueStringified = startQueue.map((s) => s.join(''));
-
-      const allNodes = [...new Set([endQueueStringified, startQueueStringified].flat())];
-
-      setTilesMaps((tiles) => {
-        const tilesFindInAlgorithm = tiles.map((t) => {
-
-
-          if (!t.isBlock) {
-            if (allNodes.includes(t.index)) {
-              if (endQueueStringified.includes(t.index) && startQueueStringified.includes(t.index)) {
-                t.background = "#521262";
-              } else {
-                t.background = startQueueStringified.includes(t.index)
-                  ? "#fcbad3"
-                  : "#30e3ca";
-              }
-            }
-
-            if (t.index === startTile.index || t.index === endTile.index) {
-              t.background = t.isStart ? "#fcbad3" : "#30e3ca";
-            }
-          }
-          return t;
-        });
-
-        return tilesFindInAlgorithm;
-      });
+      setTilesMaps(tilesFindInAlgorithm);
     } catch (error) {
-      console.error(error)
-      setShowAlert(true)
+      console.error(error);
+      setShowAlert(true);
     }
   };
 
@@ -155,20 +131,49 @@ function App() {
                   >
                     Bilateral
                   </MenuItem>
+                  <MenuItem
+                    icon={<UpDownIcon />}
+                    onClick={() => setAlgorithmSelected("diagonal")}
+                  >
+                    A* (Diagonal)
+                  </MenuItem>
+                  <MenuItem
+                    icon={<UpDownIcon />}
+                    onClick={() => setAlgorithmSelected("euclides")}
+                  >
+                    A* (Euclides)
+                  </MenuItem>
                 </MenuList>
               </Menu>
             </HStack>
           </Box>
         </Container>
 
-        <Button marginY={10} onClick={() => startAlgorithm(tilesMap)}>
+        <Button
+          marginY={10}
+          onClick={() => {
+      
+            startAlgorithm(tilesMap);
+          }}
+        >
           Iniciar busca
         </Button>
 
-        {showAlert && <Alert status="error">
-          <WarningTwoIcon color={'#F47070'} marginRight={5} />
-           Possivel erro de configuração de mapa!
-        </Alert>}
+        {
+          totalCost > 0 && (
+            <Alert status='info'>
+            <CheckIcon />
+            O custo total até encontrar o objetivo foi: {totalCost.toFixed(2)}
+          </Alert>
+          )
+        }
+        {showAlert && (
+          <Alert status="error">
+            <WarningTwoIcon color={"#F47070"} marginRight={5} />
+            Possivel erro de configuração de mapa!
+          </Alert>
+          )
+        }
         <GeneratorGrid
           setTilesMap={setTilesMaps}
           editorSelected={editorSelected}

@@ -10,7 +10,7 @@ export class Bilateral extends AlgorithmHelper {
   path: string[];
 
   constructor({ tilesMap }: IBilateralInput) {
-    super();
+   super();
 
     const { startTile, endTile } = tilesMap.reduce(
       (acc, cr) => {
@@ -68,8 +68,6 @@ export class Bilateral extends AlgorithmHelper {
     const endSearch = {
       currentTiles: this.endTile,
     };
-
-
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
@@ -176,6 +174,37 @@ export class Bilateral extends AlgorithmHelper {
         turn--;
       }
     }
-    console.log(this.queues)
+
+
+    const { endQueue, startQueue } = this.queues;
+
+    const endQueueStringified = endQueue?.map((e) => e.join(''));
+    const startQueueStringified = startQueue?.map((s) => s.join(''));
+
+    const allNodes = [...new Set([endQueueStringified, startQueueStringified].flat())];
+
+    const tilesFindInAlgorithm = this.tilesMap.map((t) => {
+      delete t.background;
+      delete t.totalCost;
+
+      if (!t.isBlock) {
+        if (allNodes.includes(t.index)) {
+          if (endQueueStringified.includes(t.index) && startQueueStringified.includes(t.index)) {
+            t.background = "#521262";
+          } else {
+            t.background = startQueueStringified.includes(t.index)
+              ? "#66B039"
+              : "#30e3ca";
+          }
+        }
+
+        if (t.index === this.startTile.index || t.index === this.endTile.index) {
+          t.background = t.isStart ? "#66B039" : "#30e3ca";
+        }
+      }
+      return t;
+    })
+
+    return tilesFindInAlgorithm
   }
 }

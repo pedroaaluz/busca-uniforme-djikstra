@@ -1,6 +1,9 @@
-
 export abstract class AlgorithmHelper {
   abstract start(): void;
+
+  findTotalCost() {
+    return 0
+  }
 
   findNodes(coord: number[], tilesBlocked: string[]) {
     const nodes = [];
@@ -18,13 +21,15 @@ export abstract class AlgorithmHelper {
           !tilesBlocked.includes(`${row}${column}`)
         ) {
           nodes.push({
-            coord: [row, column], 
-            cost: (column !== columnTileCur && row !== rowTileCur) ? 1.4 : 1
+            index: [row, column].join(""),
+            coord: [row, column],
+            father: coord.join(""),
+            cost: column !== columnTileCur && row !== rowTileCur ? 14 : 10,
           });
         }
       }
     }
 
-    return nodes
+    return nodes;
   }
 }
