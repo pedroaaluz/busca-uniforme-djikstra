@@ -1,6 +1,10 @@
 export abstract class AlgorithmHelper {
   abstract start(): void;
 
+  findTotalCost() {
+    return 0
+  }
+
   findNodes(coord: number[], tilesBlocked: string[]) {
     const nodes = [];
 

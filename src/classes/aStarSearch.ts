@@ -1,4 +1,6 @@
 import { ITileMap } from "../types/ITilesMap";
+import { calculateDiagonalDistance } from "../utils/calculateDiagonalDistance";
+import { calculateEuclidianDistance } from "../utils/calculateEuclidianDistance";
 import { AlgorithmHelper } from "./algorithmHelper";
 
 interface ITileCostMap extends ITileMap {
@@ -14,36 +16,20 @@ interface IQueues {
 
 interface IaStarInput {
   tilesMap: ITileMap[];
+  heuristic: string;
 }
 
-function calculateDistance(start: number[], goal: number[]) {
-  const distanceX = Math.abs(start[0] - goal[0]);
-  const distanceY = Math.abs(start[1] - goal[1]);
-
-  if (distanceX > distanceY) {
-    return 14 * distanceY + 10 * (distanceX - distanceY);
-  }
-
-  return 14 * distanceX + 10 * (distanceY - distanceX);
-}
-
-function calculateEuclidianDistance(start: number[], goal: number[]) {
-  const distanceX = Math.pow(start[0] - goal[0], 2);
-  const distanceY = Math.pow(start[1] - goal[1], 2);
-
-  const distanceBetweenPoints = Math.sqrt(distanceX + distanceY);
-
-  const numberParsed = Number(distanceBetweenPoints.toFixed(1))
-  return numberParsed;
-} 
+type TCalculateHeuristic =  (start: number[], goal: number[]) => number;
 
 export class AStarSearch extends AlgorithmHelper {
   startTile: ITileMap;
   endTile: ITileMap;
   queues: IQueues;
   tilesMap: ITileMap[];
+  path: ITileCostMap[];
+  calculateHeuristic: TCalculateHeuristic;
 
-  constructor({ tilesMap }: IaStarInput) {
+  constructor({ tilesMap, heuristic }: IaStarInput) {
     super();
 
     const { startTile, endTile } = tilesMap.reduce(
@@ -58,14 +44,23 @@ export class AStarSearch extends AlgorithmHelper {
       { startTile: {} as ITileMap, endTile: {} as ITileMap }
     );
 
+    if(!heuristic) throw new Error('heuristic is required');
+    
+    this.calculateHeuristic = heuristic === 'diagonal' ? calculateDiagonalDistance : calculateEuclidianDistance
+
     this.queues = {
       openQueue: [],
       closedQueue: [],
     };
 
+    this.path = []
     this.tilesMap = tilesMap;
     this.startTile = startTile;
     this.endTile = endTile;
+  }
+
+  findTotalCost() {
+    return this.path.reduce((acc,cr)=> { return acc + cr.totalCost}, 0)
   }
 
   start() {
@@ -74,7 +69,7 @@ export class AStarSearch extends AlgorithmHelper {
 
     const startCostMap: ITileCostMap = {
       ...this.startTile,
-      totalCost: calculateEuclidianDistance(
+      totalCost: this.calculateHeuristic(
         this.startTile.coord,
         this.endTile.coord
       ),
@@ -87,6 +82,7 @@ export class AStarSearch extends AlgorithmHelper {
     // eslint-disable-next-line no-constant-condition
     while (this.queues.openQueue.length > 0) {
       const { openQueue, closedQueue } = this.queues;
+
       this.queues.openQueue = openQueue.sort(
         (a, b) => a.totalCost - b.totalCost
       );
@@ -100,16 +96,12 @@ export class AStarSearch extends AlgorithmHelper {
         break;
       }
 
-      this.queues.openQueue = openQueue.filter(
-        (t) => t.index !== currentTile.index
-      );
-      this.queues.closedQueue.push(currentTile);
-
       const neighborNodes = this.findNodes(
         currentTile.coord,
         tilesBlockedFormatted
       ).filter((n) => !closedQueue.find((c) => c.index === n.index));
 
+      
       neighborNodes.forEach((node) => {
         const nodeWithCost: ITileCostMap = {
           ...node,
@@ -119,7 +111,7 @@ export class AStarSearch extends AlgorithmHelper {
           totalCost:
             currentTile.distance +
             node.cost +
-            calculateEuclidianDistance(node.coord, this.endTile.coord),
+            this.calculateHeuristic(node.coord, this.endTile.coord),
           father: currentTile.index,
         };
 
@@ -134,7 +126,6 @@ export class AStarSearch extends AlgorithmHelper {
       });
     }
 
-    const path = [];
     let currentFather = this.endTile.index;
 
     while (currentFather !== "") {
@@ -142,7 +133,7 @@ export class AStarSearch extends AlgorithmHelper {
         (n) => n.index === currentFather
       )!;
 
-      path.push(currentNode);
+      this.path.push(currentNode);
       currentFather = currentNode.father;
     }
 
@@ -150,30 +141,22 @@ export class AStarSearch extends AlgorithmHelper {
     const nodesInclosedQueue = this.queues.closedQueue.map(
       ({ index }) => index
     );
-    const nodesInPath = path.map((p) => p.index);
+    const nodesInPath =  this.path.map((p) => p.index);
 
     const {closedQueue, openQueue} = this.queues
     const allTiles = [...closedQueue, ...openQueue ]
 
     return this.tilesMap.map((t) => {
       delete t.background;
+
       if (t.isBlock) return t;
 
-      if (nodesInOpenQueue.includes(t.index)) {
-        t.background = "#b83b5e";
-      }
-
-      if (nodesInclosedQueue.includes(t.index)) {
-        t.background = "#f9ed69";
-      }
-
-      if (nodesInPath.includes(t.index)) {
-        t.background = "#66B039";
-      }
-
-      if ([this.endTile.index, this.startTile.index].includes(t.index)) {
-        t.background = "#66B039";
-      }
+      // tudo na fila aberta fica vermelho
+      if (nodesInOpenQueue.includes(t.index) ) t.background = "#b83b5e";
+      // tudo na fila fechada fica amarela
+      if (nodesInclosedQueue.includes(t.index)) t.background = "#f9ed69";
+      // o caminho achado
+      if (nodesInPath.includes(t.index)) t.background = "#66B039";
 
       const tileCost = allTiles.find((at) => at.index === t.index);
 

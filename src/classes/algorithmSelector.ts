@@ -4,8 +4,10 @@ import { Bilateral } from "./bilateral";
 
 export const algorithmSelector = (algorithm: string, tilesMap: ITileMap[]) => {
   switch (algorithm) {
-    case "aStarSearch":
-      return new AStarSearch({tilesMap})
+    case "diagonal":
+      return new AStarSearch({tilesMap, heuristic: 'diagonal'})
+    case "euclides":
+      return new AStarSearch({tilesMap, heuristic: 'euclides'})
     case "bilateral":
       return new Bilateral({tilesMap})
     default:

@@ -184,19 +184,22 @@ export class Bilateral extends AlgorithmHelper {
     const allNodes = [...new Set([endQueueStringified, startQueueStringified].flat())];
 
     const tilesFindInAlgorithm = this.tilesMap.map((t) => {
+      delete t.background;
+      delete t.totalCost;
+
       if (!t.isBlock) {
         if (allNodes.includes(t.index)) {
           if (endQueueStringified.includes(t.index) && startQueueStringified.includes(t.index)) {
             t.background = "#521262";
           } else {
             t.background = startQueueStringified.includes(t.index)
-              ? "#b83b5e"
+              ? "#66B039"
               : "#30e3ca";
           }
         }
 
         if (t.index === this.startTile.index || t.index === this.endTile.index) {
-          t.background = t.isStart ? "#b83b5e" : "#30e3ca";
+          t.background = t.isStart ? "#66B039" : "#30e3ca";
         }
       }
       return t;
